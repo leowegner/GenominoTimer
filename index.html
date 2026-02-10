@@ -163,6 +163,11 @@
                         SIGUIENTE TURNO
                     </div>
                 </button>
+
+                <button onclick="endRound()"
+                    class="pointer-events-auto mt-8 text-xs font-bold text-red-500/50 hover:text-red-500 hover:underline uppercase tracking-widest transition">
+                    FINALIZAR RONDA
+                </button>
             </div>
         </div>
     </main>
@@ -173,26 +178,70 @@
             <h2 class="text-3xl font-bold text-green-500 mb-6 italic underline">PROTOCOLOS_DE_JUEGO.txt</h2>
             <div class="space-y-4 text-slate-300">
                 <p><span class="text-green-500 font-bold">> 01.</span> Cada jugador comienza con <span
-                        class="text-cyan-400">3 muestras de ADN</span> (vidas).</p>
+                        class="text-cyan-400">0 Puntos de Investigación</span>.</p>
                 <p><span class="text-green-500 font-bold">> 02.</span> El tiempo es crítico. Si la secuencia llega a
-                    cero, la muestra se degrada (pierdes 1 vida).</p>
-                <p><span class="text-green-500 font-bold">> 03.</span> El botón central transfiere la carga viral al
-                    siguiente sujeto.</p>
-                <p><span class="text-green-500 font-bold">> 04.</span> Si un sujeto pierde todas sus vidas, queda
-                    ELIMINADO del experimento.</p>
+                    cero, debes responder una pregunta.</p>
+                <p><span class="text-green-500 font-bold">> 03.</span> Respuesta Correcta: <span
+                        class="text-green-400">+1 Punto</span>. Respuesta Incorrecta: <span class="text-red-400">-1
+                        Punto</span>.</p>
+                <p><span class="text-green-500 font-bold">> 04.</span> El objetivo es acumular la mayor cantidad de
+                    puntos posible.</p>
             </div>
             <button onclick="toggleRules()"
                 class="mt-8 w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-green-500">CERRAR_PROTOCOLO</button>
         </div>
     </div>
 
-    <!-- Modal Alerta Muestra Degradada -->
-    <div id="death-modal" class="fixed inset-0 bg-red-950/80 hidden items-center justify-center z-[200] p-4">
-        <div class="bg-slate-900 border-2 border-red-500 p-8 rounded-3xl max-w-sm w-full text-center">
-            <h3 class="text-red-500 text-2xl font-black mb-2 uppercase">Muestra Degradada</h3>
-            <p id="death-msg" class="text-slate-400 mb-6">El sujeto ha perdido estabilidad genética.</p>
-            <button onclick="closeDeathModal()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">REANUDAR
-                SECUENCIA</button>
+    <!-- Modal Pregunta de Salvación -->
+    <div id="question-modal" class="fixed inset-0 bg-slate-950/95 hidden items-center justify-center z-[150] p-4">
+        <div class="bg-slate-900 border-2 border-cyan-500 p-8 rounded-3xl max-w-2xl w-full relative overflow-hidden">
+            <!-- Fondo decorativo -->
+            <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                <svg class="w-32 h-32 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M7 12a5 5 0 110-10 5 5 0 010 10zm10-5a5 5 0 10-10 0 5 5 0 0010 0zM3.5 15.5c1.3-1.3 3.3-1.3 4.6 0l4.7 4.7c1.3 1.3 1.3 3.3 0 4.6l-4.7-4.7c-1.3-1.3-1.3-3.3 0-4.6z" />
+                </svg>
+            </div>
+
+            <h3 class="text-cyan-400 text-xl font-bold mb-2 tracking-widest uppercase">¡ALERTA DE DESESTABILIZACIÓN!
+            </h3>
+            <p class="text-slate-400 mb-6 text-sm">Responde para ganar puntos de investigación.</p>
+
+            <div class="mb-8">
+                <h4 id="question-text" class="text-2xl font-bold text-white mb-6 leading-relaxed">¿Pregunta?</h4>
+                <div id="answers-container" class="grid gap-3">
+                    <!-- Respuestas se inyectan aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-[200] p-4">
+        <div id="feedback-content" class="p-8 rounded-3xl max-w-sm w-full text-center border-2 bg-slate-900">
+            <h3 id="feedback-title" class="text-2xl font-black mb-2 uppercase"></h3>
+            <p id="feedback-msg" class="text-slate-300 mb-6"></p>
+            <button onclick="closeFeedbackModal()" class="w-full py-3 rounded-xl font-bold text-slate-900"
+                id="feedback-btn"></button>
+        </div>
+    </div>
+
+    <!-- Modal Ganador -->
+    <div id="winner-modal"
+        class="fixed inset-0 bg-slate-950/90 hidden items-center justify-center z-[200] p-4 text-center">
+        <div
+            class="bg-slate-900 border-2 border-green-500 p-10 rounded-3xl max-w-lg w-full relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.3)]">
+            <h2 class="text-4xl font-black text-white mb-2 uppercase tracking-tighter">Resultados Finales</h2>
+            <p class="text-green-500 font-bold mb-8 uppercase tracking-widest">Secuencia Completada</p>
+
+            <div id="winner-list" class="space-y-4 mb-8">
+                <!-- Scores injected here -->
+            </div>
+
+            <button onclick="restartGame()"
+                class="w-full py-4 bg-green-600 hover:bg-green-500 text-slate-900 rounded-xl font-black text-xl tracking-widest transition shadow-lg shadow-green-900/40">
+                NUEVO EXPERIMENTO
+            </button>
         </div>
     </div>
 
@@ -203,13 +252,117 @@
         let timerId = null;
         let initialTime = 30;
 
+        // Banco de Preguntas sobre Genética
+        const questions = [
+            {
+                q: "¿Cuál es la unidad básica de la herencia?",
+                a: ["Gen", "Cromosoma", "ADN", "Proteína"],
+                correct: 0
+            },
+            {
+                q: "¿Qué molécula lleva la información genética en la mayoría de los organismos?",
+                a: ["ADN", "ARN", "Proteína", "Lípido"],
+                correct: 0
+            },
+            {
+                q: "¿Cómo se llama la estructura que contiene el ADN dentro del núcleo celular?",
+                a: ["Cromosoma", "Ribosoma", "Mitocondria", "Lisosoma"],
+                correct: 0
+            },
+            {
+                q: "¿Quién es considerado el padre de la genética?",
+                a: ["Gregor Mendel", "Charles Darwin", "Louis Pasteur", "Francis Crick"],
+                correct: 0
+            },
+            {
+                q: "¿Qué bases nitrogenadas forman los pares en el ADN?",
+                a: ["Adenina-Timina, Citosina-Guanina", "Adenina-Guanina, Citosina-Timina", "Adenina-Citosina, Guanina-Timina", "Adenina-Uracilo, Citosina-Guanina"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es un alelo?",
+                a: ["Una variante de un gen", "Un tipo de cromosoma", "Una proteína estructural", "Una enzima"],
+                correct: 0
+            },
+            {
+                q: "¿Qué significa que un organismo sea homocigoto?",
+                a: ["Tiene dos alelos idénticos para un gen", "Tiene dos alelos diferentes para un gen", "No tiene genes", "Tiene cromosomas extra"],
+                correct: 0
+            },
+            {
+                q: "¿Y heterocigoto?",
+                a: ["Tiene dos alelos diferentes para un gen", "Tiene dos alelos idénticos", "Es un clon", "Es una mutación"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es el fenotipo?",
+                a: ["Las características observables de un organismo", "La composición genética", "El número de cromosomas", "El tipo de sangre"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es el genotipo?",
+                a: ["La composición genética de un organismo", "Lo que se ve a simple vista", "El ambiente del organismo", "Su dieta"],
+                correct: 0
+            },
+            {
+                q: "¿Cuántos pares de cromosomas tiene un ser humano típico?",
+                a: ["23 pares", "46 pares", "22 pares", "24 pares"],
+                correct: 0
+            },
+            {
+                q: "¿Qué cromosomas determinan el sexo biológico masculino en humanos?",
+                a: ["XY", "XX", "YY", "XO"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es una mutación?",
+                a: ["Un cambio en la secuencia de ADN", "Una enfermedad contagiosa", "Un tipo de célula", "Una proteína defectuosa por diseño"],
+                correct: 0
+            },
+            {
+                q: "¿Qué proceso celular divide una célula diploide en gametos haploides?",
+                a: ["Meiosis", "Mitosis", "Fisión binaria", "Apoptosis"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es un rasgo dominante?",
+                a: ["El que se expresa incluso con una sola copia del alelo", "El que solo se expresa si hay dos copias", "Un rasgo raro", "Una enfermedad"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es un rasgo recesivo?",
+                a: ["El que necesita dos copias del alelo para expresarse", "El que siempre se ve", "El más común en la población", "El más fuerte"],
+                correct: 0
+            },
+            {
+                q: "¿Cómo se llama el proceso de copiar ADN a ARN?",
+                a: ["Transcripción", "Traducción", "Replicación", "Mutación"],
+                correct: 0
+            },
+            {
+                q: "¿Cómo se llama el proceso de sintetizar proteínas a partir de ARN?",
+                a: ["Traducción", "Transcripción", "Replicación", "Duplicación"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es el Proyecto Genoma Humano?",
+                a: ["Un esfuerzo para secuenciar todo el ADN humano", "Un experimento de clonación", "Una base de datos de enfermedades", "Un nuevo hospital"],
+                correct: 0
+            },
+            {
+                q: "¿Qué es la terapia génica?",
+                a: ["Tratar enfermedades modificando los genes", "Tomar vitaminas", "Hacer ejercicio", "Cirugía plástica"],
+                correct: 0
+            }
+        ];
+
         function addPlayer() {
             const input = document.getElementById('player-input');
             const name = input.value.trim();
             if (name && players.length < 4) {
                 players.push({
                     name: name,
-                    lives: 3,
+                    score: 0,
                     id: Date.now()
                 });
                 input.value = '';
@@ -253,25 +406,15 @@
                 <div id="player-card-${i}" class="player-card pos-${i} p-4 rounded-2xl border-2 bg-slate-900/90 backdrop-blur-md">
                     <div class="text-xs opacity-70 uppercase mb-1">Sujeto_0${i + 1}</div>
                     <div class="font-black text-xl mb-3 truncate">${p.name}</div>
-                    <div class="flex gap-2 justify-center" id="lives-${i}">
-                        ${renderLives(p.lives)}
+                    <div class="flex items-center justify-center gap-2 bg-slate-800/50 rounded-lg p-2" id="score-container-${i}">
+                        <span class="text-xs text-slate-400 uppercase">PUNTOS</span>
+                        <span id="score-${i}" class="text-2xl font-bold text-white">${p.score}</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        function renderLives(count) {
-            let html = '';
-            for (let i = 0; i < 3; i++) {
-                const lostClass = i >= count ? 'lost-life' : '';
-                html += `
-                    <svg class="w-6 h-6 life-icon ${lostClass}" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M7 12a5 5 0 110-10 5 5 0 010 10zm10-5a5 5 0 10-10 0 5 5 0 0010 0z"/>
-                    </svg>
-                `;
-            }
-            return html;
-        }
+
 
         function startTurn() {
             timeLeft = initialTime;
@@ -317,24 +460,92 @@
 
         function nextTurn() {
             activePlayerIndex = (activePlayerIndex + 1) % players.length;
-            // Si el jugador está eliminado, saltar (opcional, aquí asumimos que siguen pero con 0 vidas)
             startTurn();
         }
 
         function handleTimeOut() {
             clearInterval(timerId);
-            const p = players[activePlayerIndex];
-            if (p.lives > 0) {
-                p.lives--;
-            }
-
-            document.getElementById(`lives-${activePlayerIndex}`).innerHTML = renderLives(p.lives);
-            document.getElementById('death-msg').textContent = `El sujeto ${p.name} ha perdido estabilidad genética. Vidas restantes: ${p.lives}`;
-            document.getElementById('death-modal').classList.replace('hidden', 'flex');
+            showQuestionModal();
         }
 
-        function closeDeathModal() {
-            document.getElementById('death-modal').classList.replace('flex', 'hidden');
+        function showQuestionModal() {
+            const qIndex = Math.floor(Math.random() * questions.length);
+            const questionCallback = questions[qIndex];
+
+            // Randomize answers display but keep track of correct one
+            // We create an array of indices [0, 1, 2, 3] and shuffle it
+            const indices = [0, 1, 2, 3];
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+
+            document.getElementById('question-text').textContent = questionCallback.q;
+
+            const answersHtml = indices.map(idx => {
+                const isCorrect = (idx === questionCallback.correct);
+                return `
+                    <button onclick="checkAnswer(${isCorrect})" 
+                        class="w-full text-left p-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-cyan-500 rounded-xl transition group">
+                        <span class="text-cyan-500 font-bold mr-2 group-hover:text-cyan-400">></span>
+                        ${questionCallback.a[idx]}
+                    </button>
+                `;
+            }).join('');
+
+            document.getElementById('answers-container').innerHTML = answersHtml;
+            document.getElementById('question-modal').classList.replace('hidden', 'flex');
+        }
+
+        function checkAnswer(isCorrect) {
+            document.getElementById('question-modal').classList.replace('flex', 'hidden');
+            const p = players[activePlayerIndex];
+
+            if (isCorrect) {
+                p.score++;
+                showFeedback(true, `¡Correcto! ${p.name} gana 1 punto.`);
+            } else {
+                p.score--;
+                showFeedback(false, `Incorrecto. ${p.name} pierde 1 punto.`);
+            }
+
+            // Update score UI
+            const scoreEl = document.getElementById(`score-${activePlayerIndex}`);
+            scoreEl.textContent = p.score;
+            if (p.score < 0) scoreEl.classList.add('text-red-400');
+            else scoreEl.classList.remove('text-red-400');
+        }
+
+        function showFeedback(success, msg) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            const title = document.getElementById('feedback-title');
+            const msgEl = document.getElementById('feedback-msg');
+            const btn = document.getElementById('feedback-btn');
+
+            modal.classList.replace('hidden', 'flex');
+
+            if (success) {
+                content.classList.replace('border-red-500', 'border-green-500') || content.classList.add('border-green-500');
+                content.classList.remove('border-red-500');
+                title.textContent = "MUESTRA ESTABILIZADA";
+                title.className = "text-2xl font-black mb-2 uppercase text-green-500";
+                btn.className = "w-full py-3 rounded-xl font-bold text-slate-900 bg-green-500 hover:bg-green-400";
+                btn.textContent = "CONTINUAR EXPERIMENTO";
+            } else {
+                content.classList.replace('border-green-500', 'border-red-500') || content.classList.add('border-red-500');
+                content.classList.remove('border-green-500');
+                title.textContent = "MUESTRA DEGRADADA";
+                title.className = "text-2xl font-black mb-2 uppercase text-red-500";
+                btn.className = "w-full py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-500";
+                btn.textContent = "CONTINUAR";
+            }
+
+            msgEl.textContent = msg;
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.replace('flex', 'hidden');
             nextTurn();
         }
 
@@ -345,6 +556,38 @@
                 const secs = timeLeft % 60;
                 display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
+        }
+
+        function endRound() {
+            clearInterval(timerId);
+
+            // Sort players by score descending
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            const winner = sortedPlayers[0];
+
+            const list = document.getElementById('winner-list');
+            list.innerHTML = sortedPlayers.map((p, i) => {
+                const isWinner = i === 0;
+                const medal = isWinner ? '👑' : `#${i + 1}`;
+                const bgClass = isWinner ? 'bg-green-500/20 border-green-500' : 'bg-slate-800/50 border-slate-700';
+                const textClass = isWinner ? 'text-green-400' : 'text-slate-400';
+
+                return `
+                <div class="flex items-center justify-between p-4 rounded-xl border ${bgClass}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${medal}</span>
+                        <span class="font-bold text-white text-lg">${p.name}</span>
+                    </div>
+                    <span class="font-bold text-2xl ${textClass}">${p.score} pts</span>
+                </div>
+                `;
+            }).join('');
+
+            document.getElementById('winner-modal').classList.replace('hidden', 'flex');
+        }
+
+        function restartGame() {
+            location.reload();
         }
 
     </script>
